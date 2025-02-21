@@ -1,0 +1,13 @@
+{
+  "cooldownMessages": [
+    "Whoa there! You’re doing that too fast. Wait for ${remainingTime} seconds.",
+    "Slow down! You need to wait ${remainingTime} seconds before using that command again."
+  ],
+  "denyMessages": [
+    "Sorry, you don't have the necessary permissions to execute this command.",
+    "You can't do that! Permissions are required."
+  ],
+  "mentionMessages": [
+    "Use /help"
+  ]
+}

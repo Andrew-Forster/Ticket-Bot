@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
 dotenv.config();
-
 const users = new Map();
+const { db, startDB } = require('./db/database');
 
 const {
   Client,
@@ -54,9 +54,12 @@ client.once(Events.ClientReady, async () => {
     status: 'online',
   });
 
+  startDB();
+
   await commandHandler.loadCommands(client).catch(console.error);
   await eventHandler.loadEvents(client).catch(console.error);
   await componentHandler.loadComponents(client).catch(console.error);
+
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {

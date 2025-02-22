@@ -6,7 +6,7 @@ const aboutCommand = require('../utilities/about');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('about_alias')
-    .setDescription('Displays information about the DISCORDJS Bot Template.'),
+    .setDescription('Ticket Bot'),
 
   async execute(interaction) {
     return aboutCommand.execute(interaction);

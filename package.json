@@ -5,6 +5,7 @@
   "main": "bootstrap.js",
   "scripts": {
     "start": "node bootstrap.js",
+    "dev": "nodemon bootstrap.js",
     "format": "prettier --write \"**/*.js\""
   },
   "keywords": [],
@@ -23,6 +24,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "nodemon": "^3.1.9",
     "prettier": "^3.3.3"
   }
 }

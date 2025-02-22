@@ -1,9 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { Collection } = require('discord.js');
+const { Collection, MessageFlags } = require('discord.js');
 
 async function loadComponents(client) {
-  const componentTypes = ['buttons', 'dropdowns', 'modals'];
+  const componentTypes = ['buttons', 'dropdowns', 'modals'
+    
+  ];
   const components = {};
 
   componentTypes.forEach((type) => {
@@ -64,7 +66,7 @@ async function synchronizeComponent(interaction, client) {
   if (!component) {
     return interaction.reply({
       content: 'Something went wrong!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -75,7 +77,7 @@ async function synchronizeComponent(interaction, client) {
     console.error('Error executing component:', error);
     await interaction.reply({
       content: 'An error occurred while executing the component.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral
     });
   }
 }

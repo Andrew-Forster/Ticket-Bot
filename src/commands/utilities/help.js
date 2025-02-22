@@ -10,7 +10,7 @@ module.exports = {
   async execute(interaction) {
     const commands = interaction.client.commands;
     const commandList = commands
-      .map((cmd) => `\`/${cmd.data.name}\``) //@note: if you'd like to you can display descriptions using "cmd.data.description"
+      .map((cmd) => `\`/${cmd.data.name}\``)
       .join(', ');
 
     embedOptions = {

@@ -1,4 +1,4 @@
-const { REST, Routes, Collection } = require('discord.js');
+const { REST, Routes, Collection, MessageFlags } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const config = require('../../config/config.json');
@@ -55,14 +55,14 @@ async function synchronizeCommands(interaction, client) {
   if (!command) {
     return interaction.reply({
       content: 'Something went wrong.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral
     });
   }
 
   if (!interaction.inGuild()) {
     return interaction.reply({
       content: 'Commands can only be used on the guild.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -81,7 +81,7 @@ async function synchronizeCommands(interaction, client) {
   if (command.owner && interaction.user.id !== interaction.guild.ownerId) {
     return interaction.reply({
       content: 'This command is intended for the server owner only.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -108,7 +108,7 @@ async function synchronizeCommands(interaction, client) {
           '${remainingTime}',
           remainingTime,
         ),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral
       });
     }
   }

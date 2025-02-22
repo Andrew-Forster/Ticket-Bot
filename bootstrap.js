@@ -68,9 +68,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
       .synchronizeCommands(interaction, client)
       .catch(console.error);
   } else {
-    await componentHandler
-      .synchronizeComponent(interaction, client)
-      .catch(console.error);
+    // await componentHandler
+    //   .synchronizeComponent(interaction, client)
+    //   .catch(console.error);
   }
 });
 

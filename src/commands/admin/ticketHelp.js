@@ -3,13 +3,11 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
   EmbedBuilder,
   ComponentType,
-  MessageFlags,
 } = require('discord.js');
+
+const ticketSetup = require('./ticketSetup');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -54,7 +52,8 @@ module.exports = {
 
     collector.on('collect', async (i) => {
       if (i.customId === 'create') {
-        await i.message.delete();
+        await interaction.deleteReply();
+        ticketSetup.execute(i);
         collector.stop();
       }
     });

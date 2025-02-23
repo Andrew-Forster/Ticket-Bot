@@ -1,4 +1,3 @@
-const { MessageFlags } = require('discord.js');
 const TicketResponse = require('../models/ticketModules/TicketResponse');
 const TicketCategory = require('../models/ticketModules/TicketCategory');
 const TicketCollector = require('../models/ticketModules/TicketCollector');
@@ -40,10 +39,7 @@ async function submitTicketResponse(interaction, roles) {
   
       } catch (error) {
         console.error('Modal handling error:', error);
-        await interaction.reply({
-          content: 'An error occurred while creating the Ticket Response.',
-          flags: MessageFlags.Ephemeral,
-        });
+        return { error: 'An error occurred while creating the Ticket Response Object.' };
       }
 }
 
@@ -81,10 +77,7 @@ async function submitTicketCategory(interaction, categoryId, ticketResponseId, b
   
       } catch (error) {
         console.error('Modal handling error:', error);
-        await interaction.reply({
-          content: 'An error occurred while creating the Ticket Category.',
-          flags: MessageFlags.Ephemeral,
-        });
+        return { error: 'An error occurred while creating the Ticket Category Object.' };
       }
 }
 
@@ -124,10 +117,7 @@ async function submitTicketCollector(interaction, categories) {
   
       } catch (error) {
         console.error('Modal handling error:', error);
-        await interaction.reply({
-          content: 'An error occurred while creating the Ticket Collection.',
-          flags: MessageFlags.Ephemeral,
-        });
+        return { error: 'An error occurred while creating the Ticket Collector Object.' };
       }
 }
 

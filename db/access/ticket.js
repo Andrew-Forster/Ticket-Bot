@@ -14,7 +14,7 @@ async function getCollectors(interaction) {
         collectors.push(collector);
     }
 
-    return collectors;
+    return collectors; 
 }
 
 async function findCategory(categoryId) {

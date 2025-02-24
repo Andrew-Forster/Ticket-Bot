@@ -7,7 +7,7 @@ const {
   ActionRowBuilder,
   MessageFlags,
 } = require('discord.js');
-const { findCategory, findResponse } = require('../../db/access/ticketAttach');
+const { findCategory, findResponse } = require('../../db/access/ticket');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -75,8 +75,10 @@ module.exports = {
 
       const actionRow = new ActionRowBuilder().addComponents(button);
 
+      const roleMentions = response.roles.map((role) => `<@&${role}>`).join(', ');
+
       await channel.send({
-        content: `<@${i.user.id}>`,
+        content: `${roleMentions}`,
         embeds: [embed],
         components: [actionRow],
       });

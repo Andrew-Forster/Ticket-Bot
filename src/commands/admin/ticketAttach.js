@@ -17,7 +17,7 @@ const { embedPrompt } = require('../../utils/embeds/prompt');
 const {
   getCollectors,
   findCategory,
-} = require('../../../db/access/ticketAttach');
+} = require('../../../db/access/ticket');
 
 module.exports = {
   data: new SlashCommandBuilder()

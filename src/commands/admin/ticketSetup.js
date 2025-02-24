@@ -23,12 +23,12 @@ module.exports = {
 
     try {
       const response = await cmdFlow(interaction, categories, numberOfCategories);
-      await response.iNew.followUp({
+      await response.iNew.reply({
         embeds: [embedPrompt('Ticket System setup complete!', '#5eff5e')],
         flags: MessageFlags.Ephemeral,
       });
     } catch (err) {
-      console.error('Ticket System setup error:', err);
+      console.error('Possible Ticket System setup error:', err);
       await interaction.followUp({
         content: 'An error occurred while setting up the Ticket System.',
         flags: MessageFlags.Ephemeral,

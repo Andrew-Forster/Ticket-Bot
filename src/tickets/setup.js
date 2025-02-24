@@ -10,7 +10,6 @@ const {
   ChannelType,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
 } = require('discord.js');
 
 const {
@@ -84,6 +83,7 @@ async function showRoleSelector(i) {
  * @returns {Promise<Object>} - Resolves { iNew, ticketResponseId } if successful, rejects an error if not.
  */
 async function showTicketResponseModal({ iNew: i, roles }) {
+  
   const modal = new ModalBuilder()
     .setCustomId('ticket-response-modal')
     .setTitle('Ticket Response After Creation');

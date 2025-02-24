@@ -133,9 +133,9 @@ async function showManagePanel(i, channel, category) {
           await interaction.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setTitle(`✅ ${mention > 1 ? 'User' : 'Users'} Added`)
+                .setTitle( addedUsers.length > 1 ? `✅ Users Added` : `✅ User Added`)
                 .setDescription(
-                  `${mention} ${mention > 1 ? 'have' : 'has'} been added to the ticket.`,
+                  `Added ${mention} to the ticket.`,
                 )
                 .setColor('#00ff00'),
             ],
@@ -172,9 +172,9 @@ async function showManagePanel(i, channel, category) {
           await interaction.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setTitle(`❎ ${mention > 1 ? 'Users' : 'User'} Removed`)
+                .setTitle(removedUsers.length > 1 ? `❎ Users Removed` : `❎ User Removed`)
                 .setDescription(
-                  `${mention} ${mention > 1 ? 'have' : 'has'} been removed from the ticket.`,
+                  `Removed ${mention} to the ticket.`,
                 )
                 .setColor('#00ff00'),
             ],

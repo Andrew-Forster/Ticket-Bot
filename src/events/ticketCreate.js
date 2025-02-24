@@ -34,23 +34,23 @@ module.exports = {
 
       if (category.categoryId) {
         let parent = i.guild.channels.cache.get(category.categoryId);
-        channel.setParent(parent);
+        await channel.setParent(parent);
       }
 
-      await channel.permissionOverwrites.create(i.user, {
-        ViewChannel: true,
-        SendMessages: true,
-        ReadMessageHistory: true,
-      });
-
-      await channel.permissionOverwrites.create(i.guild.roles.everyone, {
+      await channel.permissionOverwrites.edit(i.guild.roles.everyone, {
         ViewChannel: false,
         SendMessages: false,
         ReadMessageHistory: false,
       });
 
+      await channel.permissionOverwrites.edit(i.user, {
+        ViewChannel: true,
+        SendMessages: true,
+        ReadMessageHistory: true,
+      });
+
       for (const role of response.roles) {
-        await channel.permissionOverwrites.create(role, {
+        await channel.permissionOverwrites.edit(role, {
           ViewChannel: true,
           SendMessages: true,
           ReadMessageHistory: true,
@@ -69,13 +69,15 @@ module.exports = {
       }
 
       const button = new ButtonBuilder()
-        .setCustomId(`manage-${channel.id}`)
+        .setCustomId(`manage-${categoryId}`)
         .setEmoji('🔒')
         .setStyle(ButtonStyle.Secondary);
 
       const actionRow = new ActionRowBuilder().addComponents(button);
 
-      const roleMentions = response.roles.map((role) => `<@&${role}>`).join(', ');
+      const roleMentions = response.roles
+        .map((role) => `<@&${role}>`)
+        .join(', ');
 
       await channel.send({
         content: `${roleMentions}`,

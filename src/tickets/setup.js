@@ -147,7 +147,8 @@ async function showTicketResponseModal({ iNew: i, roles }) {
  * @param {Object} opts - An object with the interaction and ticket response ID.
  * @returns {Promise<Object>} - Resolves { iNew, category, ticketResponseId } if successful, rejects an error if not.
  */
-async function showTicketCategorySelector({ iNew: i, ticketResponseId }) {
+async function showTicketCategorySelector({ iNew: i, ticketResponseId }, text) {
+  await i.deferReply({ flags: MessageFlags.Ephemeral });
   const categorySelector = new ChannelSelectMenuBuilder()
     .setCustomId('category-selector')
     .setPlaceholder('Select a category')
@@ -157,8 +158,8 @@ async function showTicketCategorySelector({ iNew: i, ticketResponseId }) {
 
   const actionRow = new ActionRowBuilder().addComponents(categorySelector);
 
-  const message = await i.reply({
-    embeds: [embedPrompt('Select a category to create a ticket in.')],
+  const message = await i.editReply({
+    embeds: [embedPrompt(text)],
     components: [actionRow],
     flags: MessageFlags.Ephemeral,
   });
@@ -197,6 +198,7 @@ async function showTicketCategorySelector({ iNew: i, ticketResponseId }) {
 async function showTicketCategoryButtonStyleOptions({
   iNew: i,
   category,
+  categoryClose,
   ticketResponseId,
 }) {
   await i.deferReply({ flags: MessageFlags.Ephemeral });
@@ -250,7 +252,7 @@ async function showTicketCategoryButtonStyleOptions({
     collector.on('collect', async (iNew) => {
       const buttonStyle = iNew.customId;
       await i.deleteReply(message.id);
-      resolve({ iNew, category, ticketResponseId, buttonStyle });
+      resolve({ iNew, category, categoryClose, ticketResponseId, buttonStyle });
       collector.stop();
     });
 
@@ -276,6 +278,7 @@ async function showTicketCategoryButtonStyleOptions({
 async function showTicketCategoryModal({
   iNew: i,
   category,
+  categoryClose,
   ticketResponseId,
   buttonStyle,
 }) {
@@ -311,6 +314,7 @@ async function showTicketCategoryModal({
           let result = await submitTicketCategory(
             iNew,
             category,
+            categoryClose,
             ticketResponseId,
             buttonStyle,
           );

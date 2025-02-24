@@ -43,7 +43,7 @@ async function submitTicketResponse(interaction, roles) {
       }
 }
 
-async function submitTicketCategory(interaction, categoryId, ticketResponseId, buttonStyle) {
+async function submitTicketCategory(interaction, categoryId, closeCategoryId, ticketResponseId, buttonStyle) {
     try {
         if (interaction.customId !== 'ticket-category-modal') return;
   
@@ -56,12 +56,14 @@ async function submitTicketCategory(interaction, categoryId, ticketResponseId, b
           buttonStyle,
           buttonEmoji,
           categoryId,
+          closeCategoryId,
           ticketResponseId,
         });
 
         const server = await Server.findOne({ serverId: interaction.guild.id });
         if (server) {
           server.TicketCategories.push(ticketCategory._id);
+          await server.save();
           await server.save();
         } else {
           const newServer = new Server({

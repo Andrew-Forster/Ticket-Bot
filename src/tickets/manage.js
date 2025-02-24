@@ -7,9 +7,10 @@ const {
   MessageFlags,
   UserSelectMenuBuilder,
   ComponentType,
+  OverwriteType,
 } = require('discord.js');
 
-async function showManagePanel(i, channel) {
+async function showManagePanel(i, channel, category) {
   const closeButton = new ButtonBuilder()
     .setCustomId(`close`)
     .setLabel('Close Ticket')
@@ -34,27 +35,34 @@ async function showManagePanel(i, channel) {
     .setStyle(ButtonStyle.Primary)
     .setEmoji('➖');
 
-  let isOpen = true;
+  const actionRow = new ActionRowBuilder();
+
+  let isOpen = null;
   const users = await getUsersInChannel(channel);
-  if (users.length === 0) {
-    isOpen = false;
-  }
-  for (const userId of users) {
-    const member = await channel.guild.members.fetch(userId).catch(() => null);
+  for (const user of users) {
+    const member = await channel.guild.members.fetch(user).catch(() => null);
     if (member) {
+      const hasViewChannelRole = member.roles.cache.some((role) =>
+        channel.permissionsFor(role).has('ViewChannel'),
+      );
       const memberPermissions = channel.permissionsFor(member);
-      if (!memberPermissions.has('ViewChannel')) {
-        isOpen = false;
+      if (hasViewChannelRole) {
+        continue;
+      }
+      if (memberPermissions.has('ViewChannel')) {
+        isOpen = true;
         break;
       }
+      isOpen = false;
     }
   }
-
-  const actionRow = new ActionRowBuilder().addComponents(
-    isOpen ? closeButton : openButton,
-    addUserButton,
-    removeUserButton,
-  );
+  if (isOpen != null) {
+    actionRow.addComponents(isOpen ? closeButton : openButton);
+  }
+  actionRow.addComponents(addUserButton);
+  if (isOpen) {
+    actionRow.addComponents(removeUserButton);
+  }
 
   const message = await i.followUp({
     content: 'Ticket management options:',
@@ -69,11 +77,10 @@ async function showManagePanel(i, channel) {
   });
 
   collector.on('collect', async (interaction) => {
-    i.deleteReply();
     collector.stop();
     switch (interaction.customId) {
       case 'close':
-        await closeTicket(channel);
+        await closeTicket(channel, category);
         await interaction.channel.send({
           embeds: [
             new EmbedBuilder()
@@ -84,7 +91,14 @@ async function showManagePanel(i, channel) {
         });
         break;
       case 'open':
-        await openTicket(channel);
+        const response = await openTicket(channel, category);
+        if (response) {
+          await interaction.reply({
+            content: response,
+            flags: MessageFlags.Ephemeral,
+          });
+          return;
+        }
         await interaction.channel.send({
           embeds: [
             new EmbedBuilder()
@@ -95,16 +109,33 @@ async function showManagePanel(i, channel) {
         });
         break;
       case 'addUser':
-        const { user: userToAdd, interaction: i1 } =
-          await showUserSelect(interaction);
-        if (userToAdd) {
-          await addUserToTicket(channel, userToAdd);
+        const { users: usersToAdd, interaction: i1 } = await showUserSelect(
+          interaction,
+          'Select users to add to the ticket.',
+        );
+        if (usersToAdd) {
+          const addedUsers = await addUsersToTicket(channel, usersToAdd);
+          const mention = addedUsers.map((user) => `<@${user}>`).join(', ');
+
+          if (addedUsers.length === 0) {
+            await interaction.followUp({
+              embeds: [
+                new EmbedBuilder()
+                  .setTitle('❌ No Users Added')
+                  .setDescription('Users were already in the ticket.')
+                  .setColor('#ff0000'),
+              ],
+              flags: MessageFlags.Ephemeral,
+            });
+            return;
+          }
+
           await interaction.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setTitle('➕ User Added')
+                .setTitle(`✅ ${mention > 1 ? 'User' : 'Users'} Added`)
                 .setDescription(
-                  `User <@${userToAdd}> has been added to the ticket.`,
+                  `${mention} ${mention > 1 ? 'have' : 'has'} been added to the ticket.`,
                 )
                 .setColor('#00ff00'),
             ],
@@ -112,18 +143,40 @@ async function showManagePanel(i, channel) {
         }
         break;
       case 'removeUser':
-        const { user: userToRemove, interaction: i2 } =
-          await showUserSelect(interaction);
-        if (userToRemove) {
-          await removeUserFromTicket(channel, userToRemove);
+        const { users: usersToRemove, interaction: i2 } = await showUserSelect(
+          interaction,
+          'Select users to remove from the ticket.',
+        );
+        if (usersToRemove) {
+          const removedUsers = await removeUsersFromTicket(
+            channel,
+            usersToRemove,
+          );
+          const mention = removedUsers.map((user) => `<@${user}>`).join(', ');
+
+          if (removedUsers.length === 0) {
+            await interaction.followUp({
+              embeds: [
+                new EmbedBuilder()
+                  .setTitle('❌ No Users Removed')
+                  .setDescription(
+                    'Users were not in the ticket or have roles that allow access.',
+                  )
+                  .setColor('#ff0000'),
+              ],
+              flags: MessageFlags.Ephemeral,
+            });
+            return;
+          }
+
           await interaction.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setTitle('➖ User Removed')
+                .setTitle(`❎ ${mention > 1 ? 'Users' : 'User'} Removed`)
                 .setDescription(
-                  `User <@${userToRemove}> has been removed from the ticket.`,
+                  `${mention} ${mention > 1 ? 'have' : 'has'} been removed from the ticket.`,
                 )
-                .setColor('#ff0000'),
+                .setColor('#00ff00'),
             ],
           });
         }
@@ -132,27 +185,33 @@ async function showManagePanel(i, channel) {
   });
 
   collector.on('end', async () => {
-    i.deleteReply();
+    if (!message || !message.guild || !message.channel) {
+      return;
+    }
+    try {
+      await i.deleteReply();
+    } catch (err) {
+      console.error('Error deleting reply:', err);
+    }
     collector.stop();
   });
 }
 
 async function getUsersInChannel(channel) {
-  const users = [];
-  channel.permissionOverwrites.cache.forEach((perm) => {
-    if (perm.type === 1) {
-      users.push(perm.id);
-    }
-  });
+  const users = channel.permissionOverwrites.cache
+    .filter((overwrite) => overwrite.type === OverwriteType.Member)
+    .map((overwrite) => overwrite.id);
+
   return users;
 }
 
-async function closeTicket(channel) {
+async function closeTicket(channel, category) {
+  await channel.setParent(category.closeCategoryId, { lockPermissions: false });
   const users = await getUsersInChannel(channel);
   users.forEach(async (userId) => {
     const member = await channel.guild.members.fetch(userId).catch(() => null);
     if (member) {
-      await channel.permissionOverwrites.edit(member, {
+      await channel.permissionOverwrites.create(member, {
         ViewChannel: false,
         SendMessages: false,
         ReadMessageHistory: false,
@@ -161,12 +220,14 @@ async function closeTicket(channel) {
   });
 }
 
-async function openTicket(channel) {
+async function openTicket(channel, category) {
+  await channel.setParent(category.categoryId, { lockPermissions: false });
   const users = await getUsersInChannel(channel);
+  if (users.length === 0) return 'No users in ticket';
   users.forEach(async (userId) => {
     const member = await channel.guild.members.fetch(userId).catch(() => null);
     if (member) {
-      await channel.permissionOverwrites.edit(member, {
+      await channel.permissionOverwrites.create(member, {
         ViewChannel: true,
         SendMessages: true,
         ReadMessageHistory: true,
@@ -175,13 +236,13 @@ async function openTicket(channel) {
   });
 }
 
-async function showUserSelect(i) {
+async function showUserSelect(i, text) {
   await i.deferReply({ flags: MessageFlags.Ephemeral });
   const userSelector = new UserSelectMenuBuilder()
     .setCustomId('user-selector')
-    .setPlaceholder('Select a user')
+    .setPlaceholder('Select users')
     .setMinValues(1)
-    .setMaxValues(1);
+    .setMaxValues(10);
 
   const actionRow = new ActionRowBuilder().addComponents(userSelector);
 
@@ -189,7 +250,7 @@ async function showUserSelect(i) {
     embeds: [
       new EmbedBuilder()
         .setTitle('Manage Ticket')
-        .setDescription('Select a user to add or remove from the ticket.')
+        .setDescription(text)
         .setColor('#9ae1ff'),
     ],
     components: [actionRow],
@@ -205,49 +266,74 @@ async function showUserSelect(i) {
     });
 
     collector.on('collect', async (interaction) => {
-      const user = interaction.values[0];
+      const users = interaction.values;
       i.deleteReply();
       collector.stop();
-      resolve({ interaction, user });
+      resolve({ interaction, users });
     });
 
     collector.on('end', async (collected) => {
       if (collected.size === 0) {
-        i.deleteReply();
-        collector.stop();
-        reject('No user selected');
+        if (!message || !message.guild || !message.channel) {
+          return; // Ensure we handle cases where the message or channel was deleted
+        }
+        try {
+          i.deleteReply();
+          collector.stop();
+          reject('No user selected');
+        } catch (err) {
+          console.error('Error deleting reply:', err);
+        }
       }
     });
   });
 }
 
-async function addUserToTicket(channel, userId) {
-  const member = await channel.guild.members.fetch(userId).catch(() => null);
-  if (member) {
-    await channel.permissionOverwrites.edit(member, {
+async function addUsersToTicket(channel, userIds) {
+  const addedUsers = [];
+
+  for (const userId of userIds) {
+    const member = await channel.guild.members.fetch(userId).catch(() => null);
+    if (!member) continue;
+
+    const permissions = channel.permissionOverwrites.cache.get(userId);
+    if (permissions && permissions.allow.has('ViewChannel')) continue;
+
+    await channel.permissionOverwrites.create(member, {
       ViewChannel: true,
       SendMessages: true,
       ReadMessageHistory: true,
     });
+
+    addedUsers.push(userId);
   }
+
+  return addedUsers;
 }
 
-async function removeUserFromTicket(channel, userId) {
-  const member = await channel.guild.members.fetch(userId).catch(() => null);
-  if (member) {
-    await channel.permissionOverwrites.edit(member, {
-      ViewChannel: null,
-      SendMessages: null,
-      ReadMessageHistory: null,
-    });
+async function removeUsersFromTicket(channel, userIds) {
+  const removedUsers = [];
+
+  for (const userId of userIds) {
+    const member = await channel.guild.members.fetch(userId).catch(() => null);
+    if (!member) continue;
+
+    const permissions = channel.permissionOverwrites.cache.get(userId);
+    if (!permissions || !permissions.allow.has('ViewChannel')) continue;
+
+    await channel.permissionOverwrites.delete(userId);
+
+    removedUsers.push(userId);
   }
+
+  return removedUsers;
 }
 
 module.exports = {
   closeTicket,
   openTicket,
   showUserSelect,
-  addUserToTicket,
-  removeUserFromTicket,
+  addUsersToTicket,
+  removeUsersFromTicket,
   showManagePanel,
 };

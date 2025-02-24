@@ -40,18 +40,22 @@ module.exports = {
 async function cmdFlow(i, categories, numberOfCategories) {
   const r1 = await showRoleSelector(i);
   const r2 = await showTicketResponseModal(r1);
-  const r3 = await showTicketCategorySelector(r2);
-  const r4 = await showTicketCategoryButtonStyleOptions(r3);
-  const r5 = await showTicketCategoryModal(r4);
-  categories.push(r5.result);
+  const r3 = await showTicketCategorySelector(r2, 'Select a category to create a ticket in.');
+  const r4 = await showTicketCategorySelector(r3, 'Select a category for closed tickets to go.');
+  const category = r3.category;
+  const categoryClose = r4.category;
+  const obj = { category, categoryClose, ticketResponseId: r4.ticketResponseId, iNew: r4.iNew };
+  const r5 = await showTicketCategoryButtonStyleOptions(obj);
+  const r6 = await showTicketCategoryModal(r5);
+  categories.push(r6.result);
   numberOfCategories++;
-  const r6 = await askAnotherCategory(r5, numberOfCategories);
-  if (r6.result === 'yes' && numberOfCategories < 5) {
-    return await cmdFlow(r6.iNew, categories, numberOfCategories);
-  } else if (r6.result === 'no' || numberOfCategories === 5) {
-    const r7 = await showCollectionModal(r6, categories);
-    return r7;
+  const r7 = await askAnotherCategory(r6, numberOfCategories);
+  if (r7.result === 'yes' && numberOfCategories < 5) {
+    return await cmdFlow(r7.iNew, categories, numberOfCategories);
+  } else if (r7.result === 'no' || numberOfCategories === 5) {
+    const r8 = await showCollectionModal(r7, categories);
+    return r8; 
   }
 
   return { numberOfCategories, categories };
-}
+} 

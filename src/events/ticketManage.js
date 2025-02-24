@@ -1,6 +1,7 @@
 const { Events, MessageFlags } = require('discord.js');
 
 const { showManagePanel } = require('../tickets/manage');
+const { findCategory } = require('../../db/access/ticket');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -12,7 +13,9 @@ module.exports = {
 
       if (!interactionId.startsWith('manage-')) return;
 
-      const channelId = interactionId.split('-')[1];
+      const categoryId = interactionId.split('-')[1];
+      const category = await findCategory(categoryId);
+      const channelId = i.channelId;
       const channel = i.guild.channels.cache.get(channelId);
 
       const permissions = channel.permissionsFor(i.user);
@@ -30,7 +33,7 @@ module.exports = {
 
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
-      await showManagePanel(i, channel);
+      await showManagePanel(i, channel, category);
     } catch (err) {
       console.error('Ticket management error:', err);
       await i.followUp({

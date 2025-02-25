@@ -1,0 +1,11 @@
+{
+  "dev_id": [
+    "399553184928104460"
+  ],
+  "deploy_commands": false,
+  "bot_name": "[Ticket Bot]",
+  "bot_name2": "Ticket Bot",
+  "bot_color": "#5865F2",
+  "log_channel": "1342563804063596747",
+  "db_type": "mongodb"
+}

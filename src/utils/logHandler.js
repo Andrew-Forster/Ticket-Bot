@@ -65,6 +65,7 @@ function initialize(client) {
     defaultConsoleLog(chalk.yellow(config.bot_name, ...args));
     sendEmbed(args.join(' '), '#FFAE42');
   };
+  return { sendEmbed };
 }
 
 module.exports = { initialize };

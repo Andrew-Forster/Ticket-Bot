@@ -40,9 +40,10 @@ client.commands = new Collection();
 client.cooldowns = new Collection();
 
 client.once(Events.ClientReady, async () => {
-  logHandler.initialize(client);
-
   console.log(`Logged in as ${client.user.displayName}`);
+  const { sendEmbed } = logHandler.initialize(client);
+
+  sendEmbed(`Logged in as ${client.user.displayName}`, '#61ff58');
 
   client.user.setPresence({
     activities: [

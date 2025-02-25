@@ -1,42 +1,19 @@
 const { Events, MessageFlags } = require('discord.js');
-
-const { showManagePanel } = require('../tickets/manage');
-const { findCategory } = require('../../db/access/ticket');
+const { findTicket, deleteTicket } = require('../../db/access/ticket');
 
 module.exports = {
-  name: Events.InteractionCreate,
+  name: Events.ChannelDelete,
   once: false,
-  async execute(i) {
+  async execute(channel) {
     try {
-      if (!i.isButton()) return;
-      const interactionId = i.customId;
+      const ticket = await findTicket(channel.id); 
 
-      if (!interactionId.startsWith('manage-')) return;
-
-      const categoryId = interactionId.split('-')[1];
-      const category = await findCategory(categoryId);
-      const channelId = i.channelId;
-      const channel = i.guild.channels.cache.get(channelId);
-
-      const permissions = channel.permissionsFor(i.user);
-      if (!permissions.has('ManageChannels')) {
-        await i.update({});
-        return;
+      if (ticket) {
+        await deleteTicket(channel, ticket);
       }
-
-      if (!channel) {
-        return i.followUp({
-          content: 'Ticket channel not found.',
-          flags: MessageFlags.Ephemeral,
-        });
-      }
-
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
-
-      await showManagePanel(i, channel, category);
     } catch (err) {
       console.error('Ticket management error:', err);
-      await i.followUp({
+      await channel.send({
         content: 'An error occurred while managing the ticket.',
         flags: MessageFlags.Ephemeral,
       });

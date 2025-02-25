@@ -199,12 +199,15 @@ async function deleteTicketFlow(i, channel, category) {
   });
 
   collector.on('end', async () => {
+    collector.stop();
+    if (!confirmation || !confirmation.guild || !confirmation.channel) {
+      return;
+    }
     try {
       await confirmation.deleteReply();
     } catch (err) {
       console.error('Error deleting reply:', err);
     }
-    collector.stop();
   });
 }
 

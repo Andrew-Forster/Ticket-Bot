@@ -11,7 +11,7 @@ const ticketSetup = require('./ticketSetup');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('ticket-help')
+    .setName('help')
     .setDescription('Creating a ticket system'),
 
   async execute(interaction) {

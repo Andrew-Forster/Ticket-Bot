@@ -3,20 +3,10 @@
 const mongoose = require("mongoose");
 
 const TicketSchema = new mongoose.Schema({
-    userId: String,
-    channelId: String,
-    status: { type: String, default: "open" }
+    userId: { type: String, required: true },
+    channelId: { type: String, required: true },
+    ticketCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: "TicketCategory", required: true },
+    transcript: { type: String, required: false },
 });
 
 module.exports = mongoose.model("Ticket", TicketSchema);
-
-// const { DataTypes } = require("sequelize");
-// const db = require("../database");
-
-// const Ticket = db.define("Ticket", {
-//     userId: { type: DataTypes.STRING, allowNull: false },
-//     channelId: { type: DataTypes.STRING, allowNull: false },
-//     status: { type: DataTypes.STRING, defaultValue: "open" }
-// });
-
-// module.exports = Ticket;

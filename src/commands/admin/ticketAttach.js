@@ -21,7 +21,7 @@ const {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('ticket-attach')
+    .setName('attach')
     .setDescription('Attach a collector to a channel.'),
 
   async execute(interaction) {

@@ -7,7 +7,7 @@ const {
   ActionRowBuilder,
   MessageFlags,
 } = require('discord.js');
-const { findCategory, findResponse } = require('../../db/access/ticket');
+const { findCategory, findResponse, createTicket } = require('../../db/access/ticket');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -27,6 +27,15 @@ module.exports = {
       const category = await findCategory(categoryId);
       const response = await findResponse(category.ticketResponseId);
 
+      if (!category || !response) {
+        console.error('Category or response not found.');
+        i.followUp({
+          content: 'An error occurred while creating the ticket.',
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
       const channel = await i.guild.channels.create({
         name: `${response.title.toLowerCase().replace(/ /g, '-')}-${i.user.username}`,
         type: ChannelType.GuildText,
@@ -36,6 +45,8 @@ module.exports = {
         let parent = i.guild.channels.cache.get(category.categoryId);
         await channel.setParent(parent);
       }
+
+      await createTicket(i, categoryId, channel.id);
 
       await channel.permissionOverwrites.edit(i.guild.roles.everyone, {
         ViewChannel: false,

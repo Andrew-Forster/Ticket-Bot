@@ -27,6 +27,10 @@ async function findResponse(responseId) {
   return response;
 }
 
+async function findTicket(channelId) {
+    const ticket = await Ticket.findOne({ channelId });
+    return ticket;
+}
 
 
 /**
@@ -60,4 +64,4 @@ async function createTicket(interaction, categoryId, channelId) {
   return ticket;
 }
 
-module.exports = { getCollectors, findCategory, findResponse, createTicket };
+module.exports = { getCollectors, findCategory, findResponse, createTicket, findTicket };

@@ -10,6 +10,7 @@ const {
   EmbedBuilder,
   ButtonBuilder,
   ButtonStyle,
+  PermissionFlagsBits,
 } = require('discord.js');
 
 const { embedPrompt } = require('../../utils/embeds/prompt');
@@ -22,7 +23,8 @@ const {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('attach')
-    .setDescription('Attach a collector to a channel.'),
+    .setDescription('Attach a collector to a channel.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
   async execute(interaction) {
     try {

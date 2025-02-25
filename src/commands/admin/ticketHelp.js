@@ -5,6 +5,7 @@ const {
   ButtonStyle,
   EmbedBuilder,
   ComponentType,
+  PermissionFlagsBits,
 } = require('discord.js');
 
 const ticketSetup = require('./ticketSetup');
@@ -12,7 +13,9 @@ const ticketSetup = require('./ticketSetup');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Creating a ticket system'),
+    .setName('help')
+    .setDescription('Creating a ticket system')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
   async execute(interaction) {
     const embed = new EmbedBuilder().setTitle('Create a Ticket System')

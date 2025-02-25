@@ -2,10 +2,10 @@
   "name": "ticket-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "bootstrap.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node bootstrap.js",
-    "dev": "nodemon bootstrap.js",
+    "start": "node app.js",
+    "dev": "nodemon --delay 10 app.js",
     "format": "prettier --write \"**/*.js\""
   },
   "keywords": [],

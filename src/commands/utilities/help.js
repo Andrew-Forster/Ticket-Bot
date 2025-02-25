@@ -4,8 +4,8 @@ const createEmbed = require('../../utils/embedBuilder');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('help')
-    .setDescription('Replies with list of all commands and descriptions!'),
+    .setName('commands')
+    .setDescription('Command List!'),
 
   async execute(interaction) {
     const commands = interaction.client.commands;

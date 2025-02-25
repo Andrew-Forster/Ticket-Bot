@@ -5,7 +5,7 @@ const createEmbed = require('../../utils/embedBuilder');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('restart')
-    .setDescription("[DEV] Restart's the client!"),
+    .setDescription("restart"),
   developer: true,
   async execute(interaction) {
     await interaction.deferReply();

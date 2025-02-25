@@ -80,106 +80,20 @@ async function showManagePanel(i, channel, category) {
     collector.stop();
     switch (interaction.customId) {
       case 'close':
-        await closeTicket(channel, category);
-        await interaction.channel.send({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle('🔒 Ticket Closed')
-              .setDescription('Users have been removed.')
-              .setColor('#ff0000'),
-          ],
-        });
+        const resClose = await closeTicketFlow(interaction, channel, category);
+        interaction.channel.send(resClose);
         break;
       case 'open':
-        const response = await openTicket(channel, category);
-        if (response) {
-          await interaction.reply({
-            content: response,
-            flags: MessageFlags.Ephemeral,
-          });
-          return;
-        }
-        await interaction.channel.send({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle('🔓 Ticket Opened')
-              .setDescription('Users have been added.')
-              .setColor('#00ff00'),
-          ],
-        });
+        const resOpen = await openTicketFlow(interaction, channel, category);
+        interaction.channel.send(resOpen);
         break;
       case 'addUser':
-        const { users: usersToAdd, interaction: i1 } = await showUserSelect(
-          interaction,
-          'Select users to add to the ticket.',
-        );
-        if (usersToAdd) {
-          const addedUsers = await addUsersToTicket(channel, usersToAdd);
-          const mention = addedUsers.map((user) => `<@${user}>`).join(', ');
-
-          if (addedUsers.length === 0) {
-            await interaction.followUp({
-              embeds: [
-                new EmbedBuilder()
-                  .setTitle('❌ No Users Added')
-                  .setDescription('Users were already in the ticket.')
-                  .setColor('#ff0000'),
-              ],
-              flags: MessageFlags.Ephemeral,
-            });
-            return;
-          }
-
-          await interaction.channel.send({
-            embeds: [
-              new EmbedBuilder()
-                .setTitle( addedUsers.length > 1 ? `✅ Users Added` : `✅ User Added`)
-                .setDescription(
-                  `Added ${mention} to the ticket.`,
-                )
-                .setColor('#00ff00'),
-            ],
-          });
-        }
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        await addUsers(interaction, channel);
         break;
       case 'removeUser':
-        const { users: usersToRemove, interaction: i2 } = await showUserSelect(
-          interaction,
-          'Select users to remove from the ticket.',
-        );
-        if (usersToRemove) {
-          const removedUsers = await removeUsersFromTicket(
-            channel,
-            usersToRemove,
-          );
-          const mention = removedUsers.map((user) => `<@${user}>`).join(', ');
-
-          if (removedUsers.length === 0) {
-            await interaction.followUp({
-              embeds: [
-                new EmbedBuilder()
-                  .setTitle('❌ No Users Removed')
-                  .setDescription(
-                    'Users were not in the ticket or have roles that allow access.',
-                  )
-                  .setColor('#ff0000'),
-              ],
-              flags: MessageFlags.Ephemeral,
-            });
-            return;
-          }
-
-          await interaction.channel.send({
-            embeds: [
-              new EmbedBuilder()
-                .setTitle(removedUsers.length > 1 ? `❎ Users Removed` : `❎ User Removed`)
-                .setDescription(
-                  `Removed ${mention} to the ticket.`,
-                )
-                .setColor('#00ff00'),
-            ],
-          });
-        }
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        await removeUsers(interaction, channel);
         break;
     }
   });
@@ -195,6 +109,112 @@ async function showManagePanel(i, channel, category) {
     }
     collector.stop();
   });
+}
+
+async function openTicketFlow(i, channel, category) {
+  const response = await openTicket(channel, category);
+  if (response) {
+    return {
+      content: response,
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+  return {
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('🔓 Ticket Opened')
+        .setDescription('Users have been added.')
+        .setColor('#00ff00'),
+    ],
+  };
+}
+
+async function closeTicketFlow(i, channel, category) {
+  const response = await closeTicket(channel, category);
+  if (response) {
+    return {
+      content: response,
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+  return {
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('🔒 Ticket Closed')
+        .setDescription('Users have been removed.')
+        .setColor('#ff0000'),
+    ],
+  };
+}
+
+async function addUsers(i, channel) {
+  const { users: usersToAdd, interaction } = await showUserSelect(
+    i,
+    'Select users to add to the ticket.',
+  );
+  if (usersToAdd) {
+    const addedUsers = await addUsersToTicket(channel, usersToAdd);
+    const mention = addedUsers.map((user) => `<@${user}>`).join(', ');
+
+    if (addedUsers.length === 0) {
+      await i.followUp({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('❌ No Users Added')
+            .setDescription('Users were already in the ticket.')
+            .setColor('#ff0000'),
+        ],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    await i.channel.send({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle(addedUsers.length > 1 ? `✅ Users Added` : `✅ User Added`)
+          .setDescription(`Added ${mention} to the ticket.`)
+          .setColor('#00ff00'),
+      ],
+    });
+  }
+}
+
+async function removeUsers(i, channel) {
+  const { users: usersToRemove, interaction } = await showUserSelect(
+    i,
+    'Select users to remove from the ticket.',
+  );
+  if (usersToRemove) {
+    const removedUsers = await removeUsersFromTicket(channel, usersToRemove);
+    const mention = removedUsers.map((user) => `<@${user}>`).join(', ');
+
+    if (removedUsers.length === 0) {
+      await i.followUp({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('❌ No Users Removed')
+            .setDescription(
+              'Users were not in the ticket or have roles that allow access.',
+            )
+            .setColor('#ff0000'),
+        ],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    await i.channel.send({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle(
+            removedUsers.length > 1 ? `❎ Users Removed` : `❎ User Removed`,
+          )
+          .setDescription(`Removed ${mention} from the ticket.`)
+          .setColor('#00ff00'),
+      ],
+    });
+  }
 }
 
 async function getUsersInChannel(channel) {
@@ -237,7 +257,6 @@ async function openTicket(channel, category) {
 }
 
 async function showUserSelect(i, text) {
-  await i.deferReply({ flags: MessageFlags.Ephemeral });
   const userSelector = new UserSelectMenuBuilder()
     .setCustomId('user-selector')
     .setPlaceholder('Select users')
@@ -336,4 +355,9 @@ module.exports = {
   addUsersToTicket,
   removeUsersFromTicket,
   showManagePanel,
+  addUsers,
+  removeUsers,
+  getUsersInChannel,
+  closeTicketFlow,
+  openTicketFlow,
 };

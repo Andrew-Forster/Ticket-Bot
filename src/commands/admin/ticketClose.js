@@ -5,11 +5,12 @@ const {
 } = require('discord.js');
 const { findTicket, findCategory } = require('../../../db/access/ticket');
 const { closeTicketFlow } = require('../../tickets/manage');
+const { createTranscript } = require('../../utils/utils');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('close')
-    .setDescription('Close the current ticket.')
+    .setDescription('Close the current ticket & generate a transcript.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
   async execute(i) {
@@ -29,7 +30,8 @@ module.exports = {
       if (res) {
         await i.reply(res);
       }
-     
+      await createTranscript(i);
+
     } catch (err) {
       console.error('Ticket management error:', err);
       await i.followUp({

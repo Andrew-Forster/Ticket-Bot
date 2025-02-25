@@ -28,10 +28,9 @@ async function findResponse(responseId) {
 }
 
 async function findTicket(channelId) {
-    const ticket = await Ticket.findOne({ channelId });
-    return ticket;
+  const ticket = await Ticket.findOne({ channelId });
+  return ticket;
 }
-
 
 /**
  * Creates a new Ticket document and saves it to the database.
@@ -64,4 +63,22 @@ async function createTicket(interaction, categoryId, channelId) {
   return ticket;
 }
 
-module.exports = { getCollectors, findCategory, findResponse, createTicket, findTicket };
+async function deleteTicket(interaction, ticket) {
+  const server = await Server.findOne({ serverId: interaction.guild.id });
+  if (!server) return false;
+  server.Tickets.pull(ticket._id);
+  await server.save();
+
+  await Ticket.deleteOne({ _id: ticket._id });
+
+  return true;
+}
+
+module.exports = {
+  getCollectors,
+  findCategory,
+  findResponse,
+  createTicket,
+  findTicket,
+  deleteTicket,
+};

@@ -10,6 +10,8 @@ const {
   OverwriteType,
 } = require('discord.js');
 
+const { createTranscript } = require('../utils/utils');
+
 async function showManagePanel(i, channel, category) {
   const closeButton = new ButtonBuilder()
     .setCustomId(`close`)
@@ -82,6 +84,7 @@ async function showManagePanel(i, channel, category) {
       case 'close':
         const resClose = await closeTicketFlow(interaction, channel, category);
         interaction.channel.send(resClose);
+        await createTranscript(interaction);
         break;
       case 'open':
         const resOpen = await openTicketFlow(interaction, channel, category);
@@ -124,7 +127,7 @@ async function openTicketFlow(i, channel, category) {
       new EmbedBuilder()
         .setTitle('🔓 Ticket Opened')
         .setDescription('Users have been added.')
-        .setColor('#00ff00'),
+        .setColor('#00ff37'),
     ],
   };
 }
@@ -142,9 +145,67 @@ async function closeTicketFlow(i, channel, category) {
       new EmbedBuilder()
         .setTitle('🔒 Ticket Closed')
         .setDescription('Users have been removed.')
-        .setColor('#ff0000'),
+        .setColor('#ffc800'),
     ],
   };
+}
+
+async function deleteTicketFlow(i, channel, category) {
+  const confirmation = await i.reply({
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('Delete Ticket')
+        .setDescription('Are you sure you want to delete this ticket?')
+        .setColor('#ff0000'),
+    ],
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('confirm')
+          .setLabel('Confirm')
+          .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
+          .setCustomId('cancel')
+          .setLabel('Cancel')
+          .setStyle(ButtonStyle.Primary),
+      ),
+    ],
+  });
+
+  const filter = (interaction) => interaction.user.id === i.user.id;
+  const collector = confirmation.createMessageComponentCollector({
+    filter,
+    time: 60_000,
+  });
+
+  collector.on('collect', async (interaction) => {
+    collector.stop();
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    switch (interaction.customId) {
+      case 'confirm':
+        await channel.delete();
+        break;
+      case 'cancel':
+        await interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle('❌ Ticket Deletion Cancelled')
+              .setColor('#99ff00'),
+          ],
+          components: [],
+        });
+        break;
+    }
+  });
+
+  collector.on('end', async () => {
+    try {
+      await confirmation.deleteReply();
+    } catch (err) {
+      console.error('Error deleting reply:', err);
+    }
+    collector.stop();
+  });
 }
 
 async function addUsers(i, channel) {
@@ -162,7 +223,7 @@ async function addUsers(i, channel) {
           new EmbedBuilder()
             .setTitle('❌ No Users Added')
             .setDescription('Users were already in the ticket.')
-            .setColor('#ff0000'),
+            .setColor('#ff7b00'),
         ],
         flags: MessageFlags.Ephemeral,
       });
@@ -174,7 +235,7 @@ async function addUsers(i, channel) {
         new EmbedBuilder()
           .setTitle(addedUsers.length > 1 ? `✅ Users Added` : `✅ User Added`)
           .setDescription(`Added ${mention} to the ticket.`)
-          .setColor('#00ff00'),
+          .setColor('#00c3ff'),
       ],
     });
   }
@@ -197,7 +258,7 @@ async function removeUsers(i, channel) {
             .setDescription(
               'Users were not in the ticket or have roles that allow access.',
             )
-            .setColor('#ff0000'),
+            .setColor('#ff7b00'),
         ],
         flags: MessageFlags.Ephemeral,
       });
@@ -211,7 +272,7 @@ async function removeUsers(i, channel) {
             removedUsers.length > 1 ? `❎ Users Removed` : `❎ User Removed`,
           )
           .setDescription(`Removed ${mention} from the ticket.`)
-          .setColor('#00ff00'),
+          .setColor('#00c3ff'),
       ],
     });
   }
@@ -360,4 +421,5 @@ module.exports = {
   getUsersInChannel,
   closeTicketFlow,
   openTicketFlow,
+  deleteTicketFlow,
 };

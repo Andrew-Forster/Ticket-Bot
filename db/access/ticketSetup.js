@@ -1,7 +1,12 @@
-const TicketResponse = require('../models/ticketModules/TicketResponse');
-const TicketCategory = require('../models/ticketModules/TicketCategory');
-const TicketCollector = require('../models/ticketModules/TicketCollector');
-const Server = require('../models/Server');
+const getTicketResponseModel = require('../models/ticketModules/TicketResponse');
+const getTicketCategoryModel = require('../models/ticketModules/TicketCategory');
+const getTicketCollectorModel = require('../models/ticketModules/TicketCollector');
+const getServerModel = require('../models/Server');
+
+const TicketResponse = getTicketResponseModel();
+const TicketCategory = getTicketCategoryModel();
+const TicketCollector = getTicketCollectorModel();
+const Server = getServerModel();
 
 async function submitTicketResponse(interaction, roles) {
     try {

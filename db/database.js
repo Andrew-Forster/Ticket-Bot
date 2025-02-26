@@ -25,6 +25,7 @@ if (config["db_type"] === "sqlite") {
 async function startDB() {
     if (config["db_type"] === "sqlite") {
         await db.authenticate().then(() => console.log("Connected to SQLite")).catch(err => console.error("SQLite connection error:", err));
+        await db.sync();
     } else if (config["db_type"] === "mysql") {
         await db.authenticate().then(() => console.log("Connected to MySQL")).catch(err => console.error("MySQL connection error:", err));
         await db.sync();

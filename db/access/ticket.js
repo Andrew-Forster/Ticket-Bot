@@ -1,8 +1,15 @@
-const TicketResponse = require('../models/ticketModules/TicketResponse');
-const TicketCategory = require('../models/ticketModules/TicketCategory');
-const TicketCollector = require('../models/ticketModules/TicketCollector');
-const Ticket = require('../models/Ticket');
-const Server = require('../models/Server');
+const getTicketResponseModel = require('../models/ticketModules/TicketResponse');
+const getTicketCategoryModel = require('../models/ticketModules/TicketCategory');
+const getTicketCollectorModel = require('../models/ticketModules/TicketCollector');
+const getTicketModel = require('../models/Ticket');
+const getServerModel = require('../models/Server');
+const config = require('../../config/config.json');
+
+const TicketResponse = getTicketResponseModel();
+const TicketCategory = getTicketCategoryModel();
+const TicketCollector = getTicketCollectorModel();
+const Ticket = getTicketModel();
+const Server = getServerModel();
 
 async function getCollectors(interaction) {
   const server = await Server.findOne({ serverId: interaction.guild.id });
@@ -18,8 +25,12 @@ async function getCollectors(interaction) {
 }
 
 async function findCategory(categoryId) {
-  const category = await TicketCategory.findById(categoryId);
-  return category;
+  if (config.db_type === "mongodb") {
+    return await TicketCategory.findById(categoryId);
+  } else if (config.db_type === "mysql" || config.db_type === "sqlite") {
+    return await TicketCategory.findOne({ where: { id: categoryId } });
+  }
+  throw new Error("Unsupported database type.");
 }
 
 async function findResponse(responseId) {

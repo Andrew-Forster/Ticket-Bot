@@ -1,10 +1,9 @@
 const mongoose = require("mongoose");
 const { DataTypes } = require("sequelize");
 const config = require("../../config/config.json");
-const getTicketCategoryModel = require("./ticketModules/TicketCategory");
-const { db } = require("../database");
+const { db } = require("../../app");
 
-// Define MongoDB Schema (Mongoose)
+// MongoDB
 const TicketSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   channelId: { type: String, required: true },
@@ -22,14 +21,21 @@ module.exports = function getTicketModel() {
     return Ticket;
   } else if (config.db_type === "mysql" || config.db_type === "sqlite") {
 
-    const TicketModelSQL = db.define("Ticket", {
+    const TicketModelSQL = db.db.define("Ticket", {
       userId: { type: DataTypes.STRING, allowNull: false },
       channelId: { type: DataTypes.STRING, allowNull: false },
     });
 
-    TicketModelSQL.belongsTo(getTicketCategoryModel(), {
-      foreignKey: "ticketCategoryId",
-    });
+    TicketModelSQL.associate = (models) => {
+      TicketModelSQL.belongsTo(models.TicketCategory, {
+        foreignKey: "ticketCategoryId",
+      });
+
+      TicketModelSQL.belongsTo(models.Server, {
+        foreignKey: "serverId",
+      });
+    };
+
     return TicketModelSQL;
   }
 };

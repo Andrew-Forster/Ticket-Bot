@@ -3,7 +3,7 @@ const getTicketCategoryModel = require('../models/ticketModules/TicketCategory')
 const getTicketCollectorModel = require('../models/ticketModules/TicketCollector');
 const getTicketModel = require('../models/Ticket');
 const getServerModel = require('../models/Server');
-const config = require('../../config/config.json');
+const { db } = require('../../app');
 
 const TicketResponse = getTicketResponseModel();
 const TicketCategory = getTicketCategoryModel();
@@ -25,21 +25,17 @@ async function getCollectors(interaction) {
 }
 
 async function findCategory(categoryId) {
-  if (config.db_type === "mongodb") {
-    return await TicketCategory.findById(categoryId);
-  } else if (config.db_type === "mysql" || config.db_type === "sqlite") {
-    return await TicketCategory.findOne({ where: { id: categoryId } });
-  }
-  throw new Error("Unsupported database type.");
+  const category = await db.find(TicketCategory, categoryId);
+  return category;
 }
 
 async function findResponse(responseId) {
-  const response = await TicketResponse.findById(responseId);
+  const response = await db.find(TicketResponse, responseId);
   return response;
 }
 
 async function findTicket(channelId) {
-  const ticket = await Ticket.findOne({ channelId });
+  const ticket = await db.get(Ticket, { channelId });
   return ticket;
 }
 
@@ -52,21 +48,20 @@ async function findTicket(channelId) {
  * @returns {Promise<Object>} - A promise that resolves to the newly created Ticket document.
  */
 async function createTicket(interaction, categoryId, channelId) {
-  const ticket = new Ticket({
+  const ticket = await db.create(Ticket, {
     userId: interaction.user.id,
     channelId,
     ticketCategoryId: categoryId,
   });
-  await ticket.save();
 
-  const server = await Server.findOne({ serverId: interaction.guild.id });
+  const server = await db.get(Server, { serverId: interaction.guild.id });
   if (server) {
-    server.Tickets.push(ticket._id);
+    server.Tickets.push(db.getId(ticket));
     await server.save();
   } else {
     const newServer = new Server({
       serverId: interaction.guild.id,
-      Tickets: [ticket._id],
+      Tickets: [db.getId(ticket)],
     });
     await newServer.save();
   }
@@ -75,12 +70,12 @@ async function createTicket(interaction, categoryId, channelId) {
 }
 
 async function deleteTicket(interaction, ticket) {
-  const server = await Server.findOne({ serverId: interaction.guild.id });
+  const server = await db.get(Server, { serverId: interaction.guild.id });
   if (!server) return false;
   server.Tickets.pull(ticket._id);
   await server.save();
 
-  await Ticket.deleteOne({ _id: ticket._id });
+  await db.delete(Ticket, { _id: ticket._id });
 
   return true;
 }

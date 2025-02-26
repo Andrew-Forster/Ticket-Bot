@@ -140,8 +140,8 @@ async function showCollectorSelect({ interaction: i }) {
     collector.on('collect', async (interaction) => {
       const ticketCollectorId = interaction.values[0];
       const ticketCollector = collectors.find(
-        (c) => c._id.toString() === ticketCollectorId,
-      );
+        (c) => c?._id?.toString() === ticketCollectorId
+      );      
       await i.deleteReply();
       collector.stop();
       resolve({ interaction, ticketCollector });

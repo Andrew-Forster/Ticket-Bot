@@ -77,5 +77,5 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 module.exports = client;
-module.exports = { db };
 client.login(process.env.BOT_TOKEN).catch(console.error);
+module.exports = { db };

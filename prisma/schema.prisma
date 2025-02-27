@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Server {
+  id                Int                @id @default(autoincrement())
+  serverId          String             @unique
+  ticketCollectors  TicketCollector[]  @relation("ServerTicketCollectors")
+  ticketCategories  TicketCategory[]   @relation("ServerTicketCategories")
+  ticketResponses   TicketResponse[]   @relation("ServerTicketResponses")
+  tickets           Ticket[]           @relation("ServerTickets")
+}
+
+model TicketCollector {
+  id        Int      @id @default(autoincrement())
+  title     String
+  desc      String
+  image     String?  // Nullable field
+  color     String?
+  serverId  Int
+  server    Server   @relation("ServerTicketCollectors", fields: [serverId], references: [id])
+  categories CollectorCategory[]
+}
+
+model TicketCategory {
+  id             Int      @id @default(autoincrement())
+  buttonText     String
+  buttonStyle    String
+  categoryId     String
+  closeCategoryId String
+  buttonEmoji    String?  // Nullable field
+  serverId       Int
+  ticketResponseId Int?
+  server         Server   @relation("ServerTicketCategories", fields: [serverId], references: [id])
+  ticketResponse  TicketResponse? @relation(fields: [ticketResponseId], references: [id])
+  collectors     CollectorCategory[]
+}
+
+model TicketResponse {
+  id        Int      @id @default(autoincrement())
+  title     String
+  desc      String
+  image     String? 
+  color     String?
+  roles     Json?    
+  serverId  Int
+  server    Server   @relation("ServerTicketResponses", fields: [serverId], references: [id])
+  TicketCategory TicketCategory[]
+}
+
+model Ticket {
+  id        Int      @id @default(autoincrement())
+  ticketCategoryId Int
+  userId    String
+  channelId String
+  serverId  Int
+  server    Server   @relation("ServerTickets", fields: [serverId], references: [id])
+  // other fields
+}
+
+
+model CollectorCategory {
+  id              Int      @id @default(autoincrement())
+  ticketCategoryId      Int
+  ticketCollectorId     Int
+  collector       TicketCollector @relation(fields: [ticketCollectorId], references: [id])
+  category        TicketCategory @relation(fields: [ticketCategoryId], references: [id])
+}

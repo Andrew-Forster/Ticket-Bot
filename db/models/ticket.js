@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { DataTypes } = require("sequelize");
 const config = require("../../config/config.json");
 
 // MongoDB
@@ -13,22 +12,22 @@ const TicketSchema = new mongoose.Schema({
   },
 });
 
+TicketSchema.virtual("id").get(function () {
+  return this._id.toHexString();
+});
+
+TicketSchema.set("toJSON", {
+  virtuals: true,
+});
+
+TicketSchema.set("toObject", {
+  virtuals: true,
+});
+
 const Ticket = mongoose.model("Ticket", TicketSchema);
 
-module.exports = (db) => {
+module.exports = () => {
   if (config.db_type === "mongodb") {
     return Ticket;
-  } else if (config.db_type === "mysql" || config.db_type === "sqlite") {
-    const TicketModelSQL = db.db.define("Ticket", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      userId: { type: DataTypes.STRING, allowNull: false },
-      channelId: { type: DataTypes.STRING, allowNull: false },
-    });
-
-    return TicketModelSQL;
   }
 };

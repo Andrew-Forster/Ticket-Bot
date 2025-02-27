@@ -131,3 +131,6 @@ dist
 # config/config.json
 
 .database.sqlite
+prisma/*.db
+prisma/migrations
+

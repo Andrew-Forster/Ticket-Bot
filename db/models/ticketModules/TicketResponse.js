@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { DataTypes } = require("sequelize");
 const config = require("../../../config/config.json");
 
 // MongoDB
@@ -11,31 +10,22 @@ const ticketResponseSchema = new mongoose.Schema({
   roles: { type: [String], required: false }, // Array of user IDs or roles to ping
 });
 
+ticketResponseSchema.virtual("id").get(function () {
+  return this._id.toHexString();
+});
+
+ticketResponseSchema.set("toJSON", {
+  virtuals: true,
+});
+
+ticketResponseSchema.set("toObject", {
+  virtuals: true,
+});
+
 const TicketResponse = mongoose.model("TicketResponse", ticketResponseSchema);
 
-module.exports = (db) => {
+module.exports = () => {
   if (config.db_type === "mongodb") {
     return TicketResponse;
-  } else if (config.db_type === "mysql" || config.db_type === "sqlite") {
-    // SQL
-    const TicketResponseSQL = db.db.define("TicketResponse", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      title: { type: DataTypes.STRING, allowNull: false },
-      desc: { type: DataTypes.STRING, allowNull: false },
-      image: { type: DataTypes.STRING, allowNull: true },
-      color: { type: DataTypes.STRING, allowNull: false },
-      roles: { type: DataTypes.JSON, allowNull: true },
-      serverId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-    });
-    
-
-    return TicketResponseSQL;
   }
 };

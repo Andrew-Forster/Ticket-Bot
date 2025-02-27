@@ -1,7 +1,6 @@
-const { Sequelize } = require("sequelize");
+const { PrismaClient } = require("@prisma/client");
 const mongoose = require("mongoose");
 const config = require("../config/config.json");
-const { setupAssociations } = require("./associations");
 
 class DB {
   constructor() {
@@ -11,23 +10,8 @@ class DB {
   }
 
   _initializeDB() {
-    if (this.config["db_type"] === "sqlite") {
-      this.db = new Sequelize({
-        dialect: "sqlite",
-        storage: "database.sqlite",
-        logging: false,
-      });
-    } else if (this.config["db_type"] === "mysql") {
-      this.db = new Sequelize(
-        process.env.MYSQL_DATABASE,
-        process.env.MYSQL_USER,
-        process.env.MYSQL_PASSWORD,
-        {
-          host: process.env.MYSQL_HOST,
-          dialect: "mysql",
-          logging: false,
-        }
-      );
+    if (this.config["db_type"] === "sqlite" || this.config["db_type"] === "mysql") {
+      this.db = new PrismaClient();
     } else if (this.config["db_type"] === "mongodb") {
       mongoose
         .connect(process.env.MONGO_URI)
@@ -37,80 +21,67 @@ class DB {
   }
 
   async startDB() {
-    if (
-      this.config["db_type"] === "sqlite" ||
-      this.config["db_type"] === "mysql"
-    ) {
+    if (this.config["db_type"] === "sqlite" || this.config["db_type"] === "mysql") {
       try {
-        await this.db.authenticate();
+        await this.db.$connect();
         console.log(`Connected to ${this.config["db_type"]}`);
-
-        const modelDefiners = [
-          require("./models/Ticket"),
-          require("./models/Server"),
-          require("./models/ticketModules/TicketCategory"),
-          require("./models/ticketModules/TicketCollector"),
-          require("./models/ticketModules/TicketResponse"),
-        ];
-
-        for (const modelDefiner of modelDefiners) {
-          modelDefiner(this);
-        }
-
-        setupAssociations(this.db);
-
-        await this.db.sync({ force: true });
       } catch (err) {
         console.error(`${this.config["db_type"]} connection error:`, err);
       }
     }
   }
 
-  // CRUD operations for MongoDB and Sequelize
-  async find(model, id) {
+  // CRUD operations for Prisma and MongoDB
+  async find(mongoModel, model, id) {
     if (this.config.db_type === "mongodb") {
-      return await model.findById(id);
-    } else if (
-      this.config.db_type === "mysql" ||
-      this.config.db_type === "sqlite"
-    ) {
-      return await model.findOne({ where: { id } });
+      return await mongoModel.findById(id);
+    } else if (this.config.db_type === "mysql" || this.config.db_type === "sqlite") {
+      return await this.db[model].findUnique({ where: { id: parseInt(id) } });
     }
     throw new Error("Unsupported database type.");
   }
 
-  async get(model, query) {
+  async findAll(mongoModel, model, query) {
     if (this.config.db_type === "mongodb") {
-      return await model.findOne(query);
-    } else if (
-      this.config.db_type === "mysql" ||
-      this.config.db_type === "sqlite"
-    ) {
-      return await model.findOne({ where: query });
+      return await mongoModel.find(query);
+    } else if (this.config.db_type === "mysql" || this.config.db_type === "sqlite") {
+      return await this.db[model].findMany({ where: query });
     }
     throw new Error("Unsupported database type.");
   }
 
-  async getId(model) {
+  async get(mongoModel, model, query) {
     if (this.config.db_type === "mongodb") {
-      return await model._id;
-    } else if (
-      this.config.db_type === "mysql" ||
-      this.config.db_type === "sqlite"
-    ) {
-      return await model.id;
+      return await mongoModel.findOne(query);
+    } else if (this.config.db_type === "mysql" || this.config.db_type === "sqlite") {
+      return await this.db[model].findFirst({ where: query });
     }
     throw new Error("Unsupported database type.");
   }
 
-  async delete(model, id) {
+  async getAll(mongoModel, model, query) {
     if (this.config.db_type === "mongodb") {
-      return await model.deleteOne({ _id: id });
-    } else if (
-      this.config.db_type === "mysql" ||
-      this.config.db_type === "sqlite"
-    ) {
-      return await model.destroy({ where: { id } });
+      return await mongoModel.find(query);
+    } else if (this.config.db_type === "mysql" || this.config.db_type === "sqlite") {
+      return await this.db[model].findMany({ where: query });
+    }
+    throw new Error("Unsupported database type.");
+  }
+
+  async delete(mongoModel, model, id) {
+    if (this.config.db_type === "mongodb") {
+      return await mongoModel.deleteOne({ _id: id });
+    } else if (this.config.db_type === "mysql" || this.config.db_type === "sqlite") {
+      return await this.db[model].delete({ where: { id: parseInt(id) } });
+    }
+    throw new Error("Unsupported database type.");
+  }
+
+  async create(mongoModel, model, data) {
+    if (this.config.db_type === "mongodb") {
+      return await mongoModel.create(data);
+    } else if (this.config.db_type === "mysql" || this.config.db_type === "sqlite") {
+      return await this.db[model].create({ data });
     }
     throw new Error("Unsupported database type.");
   }

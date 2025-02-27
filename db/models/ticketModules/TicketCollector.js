@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { DataTypes } = require("sequelize");
 const config = require("../../../config/config.json");
 
 // MongoDB
@@ -13,32 +12,26 @@ const ticketCollectorSchema = new mongoose.Schema({
   ],
 });
 
+ticketCollectorSchema.virtual("id").get(function () {
+  return this._id.toHexString();
+});
+
+ticketCollectorSchema.set("toJSON", {
+  virtuals: true,
+});
+
+ticketCollectorSchema.set("toObject", {
+  virtuals: true,
+});
+
 const TicketCollector = mongoose.model(
   "TicketCollector",
   ticketCollectorSchema
 );
 
-module.exports = (db) => {
+
+module.exports = () => {
   if (config.db_type === "mongodb") {
     return TicketCollector;
-  } else if (config.db_type === "mysql" || config.db_type === "sqlite") {
-    // SQL
-    const TicketCollectorSQL = db.db.define("TicketCollector", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      title: { type: DataTypes.STRING, allowNull: false },
-      desc: { type: DataTypes.STRING, allowNull: false },
-      image: { type: DataTypes.STRING, allowNull: true },
-      color: { type: DataTypes.STRING, allowNull: false },
-      serverId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-    });
-
-    return TicketCollectorSQL;
   }
 };

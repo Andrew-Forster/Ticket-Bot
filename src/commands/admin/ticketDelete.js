@@ -5,6 +5,8 @@ const {
   } = require('discord.js');
   const { findTicket, findCategory, deleteTicket } = require('../../../db/access/ticket');
   const { deleteTicketFlow } = require('../../tickets/manage');
+
+  const { embedPrompt } = require('../../utils/embeds/prompt');
   
   module.exports = {
     data: new SlashCommandBuilder()
@@ -18,7 +20,7 @@ const {
         if (!ticket) {
           await i.reply({
             embeds: [embedPrompt('This is not a ticket channel.')],
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -30,7 +32,7 @@ const {
        
       } catch (err) {
         console.error('Ticket management error:', err);
-        await i.followUp({
+        await i.reply({
           content: 'An error occurred while managing the ticket.',
           flags: MessageFlags.Ephemeral,
         });

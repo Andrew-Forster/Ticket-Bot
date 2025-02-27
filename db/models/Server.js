@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { DataTypes } = require("sequelize");
 const config = require("../../config/config.json");
 
 // MongoDB
@@ -31,22 +30,22 @@ const ServerSchema = new mongoose.Schema({
   ],
 });
 
+ServerSchema.virtual("id").get(function () {
+  return this._id.toHexString();
+});
+
+ServerSchema.set("toJSON", {
+  virtuals: true,
+});
+
+ServerSchema.set("toObject", {
+  virtuals: true,
+});
+
 const Server = mongoose.model("Server", ServerSchema);
 
-module.exports = (db) => {
+module.exports = () => {
   if (config.db_type === "mongodb") {
     return Server;
-  } else if (config.db_type === "mysql" || config.db_type === "sqlite") {
-    // SQL
-    const ServerSQL = db.db.define("Server", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      serverId: { type: DataTypes.STRING, allowNull: false, unique: true },
-    });
-
-    return ServerSQL;
   }
 };

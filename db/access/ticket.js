@@ -1,5 +1,4 @@
-
-const { db } = require('../../app');
+const { db } = require("../../app");
 const TicketResponse = require("../models/ticketModules/TicketResponse")(db);
 const TicketCategory = require("../models/ticketModules/TicketCategory")(db);
 const TicketCollector = require("../models/ticketModules/TicketCollector")(db);
@@ -7,31 +6,82 @@ const Server = require("../models/Server")(db);
 const Ticket = require("../models/Ticket")(db);
 
 async function getCollectors(interaction) {
-  const server = await Server.findOne({ serverId: interaction.guild.id });
-  if (!server) return [];
+  try {
+    let server = await db.get(Server, "Server", {
+      serverId: interaction.guild.id,
+    });
 
-  let collectors = [];
-  for (const collectorId of server.TicketCollectors) {
-    const collector = await TicketCollector.findById(collectorId);
-    collectors.push(collector);
+    if (!server) return [];
+
+    let collectors = [];
+
+    if (db.config.db_type === "mongodb") {
+      for (const collectorId of server.TicketCollectors) {
+        const collector = await TicketCollector.findById(collectorId);
+        collectors.push(collector);
+      }
+    } else if (
+      db.config.db_type === "mysql" ||
+      db.config.db_type === "sqlite"
+    ) {
+      const ticketCollectors = await db.getAll(
+        TicketCollector,
+        "TicketCollector",
+        { serverId: server.id }
+      );
+      collectors.push(...ticketCollectors);
+    }
+
+    return collectors;
+  } catch (err) {
+    console.error(err);
+    return [];
   }
+}
 
-  return collectors;
+async function getCategories(ticketCollector) {
+  let categories = [];
+  try {
+    if (db.config.db_type === "mongodb") {
+      for (const c of ticketCollector.categories) {
+        const category = await findCategory(c.toString());
+        if (category) categories.push(category);
+      }
+    } else if (
+      db.config.db_type === "mysql" ||
+      db.config.db_type === "sqlite"
+    ) {
+      const collectorCategories = await db.db["CollectorCategory"].findMany({
+        where: { ticketCollectorId: ticketCollector.id },
+      });
+
+      const ticketCategories = await Promise.all(
+        collectorCategories.map(async (collectorCategory) => {
+          return await db.get(TicketCategory, "TicketCategory", {
+            id: collectorCategory.ticketCategoryId,
+          });
+        })
+      );
+      categories.push(...ticketCategories);
+    }
+
+    return categories;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
 }
 
 async function findCategory(categoryId) {
-  const category = await db.find(TicketCategory, categoryId);
-  return category;
+  return await db.find(TicketCategory, "TicketCategory", categoryId);
 }
 
 async function findResponse(responseId) {
-  const response = await db.find(TicketResponse, responseId);
-  return response;
+  return await db.find(TicketResponse, "TicketResponse", responseId);
 }
 
 async function findTicket(channelId) {
-  const ticket = await db.get(Ticket, { channelId });
-  return ticket;
+  return await db.get(Ticket, "Ticket", { channelId });
 }
 
 /**
@@ -43,34 +93,65 @@ async function findTicket(channelId) {
  * @returns {Promise<Object>} - A promise that resolves to the newly created Ticket document.
  */
 async function createTicket(interaction, categoryId, channelId) {
-  const ticket = await db.create(Ticket, {
-    userId: interaction.user.id,
-    channelId,
-    ticketCategoryId: categoryId,
+  const server = await db.get(Server, "Server", {
+    serverId: interaction.guild.id,
   });
-
-  const server = await db.get(Server, { serverId: interaction.guild.id });
   if (server) {
-    server.Tickets.push(db.getId(ticket));
-    await server.save();
-  } else {
-    const newServer = new Server({
-      serverId: interaction.guild.id,
-      Tickets: [db.getId(ticket)],
-    });
-    await newServer.save();
-  }
+    if (db.config.db_type === "mongodb") {
+      const ticketData = {
+        userId: interaction.user.id,
+        channelId,
+        ticketCategoryId: categoryId,
+      };
 
-  return ticket;
+      const ticket = await db.create(Ticket, "Ticket", ticketData);
+      server.Tickets.push(ticket.id);
+      await server.save();
+
+      return ticket;
+    } else if (
+      db.config.db_type === "mysql" ||
+      db.config.db_type === "sqlite"
+    ) {
+      const ticketData = {
+        userId: interaction.user.id,
+        channelId,
+        ticketCategoryId: parseInt(categoryId),
+        serverId: parseInt(server.id),
+      };
+
+      const ticket = await db.create(Ticket, "Ticket", ticketData);
+      await db.db["Server"].update({
+        where: { serverId: interaction.guild.id },
+        data: {
+          tickets: {
+            connect: { id: ticket.id },
+          },
+        },
+      });
+      return ticket;
+    }
+  }
+  return null;
 }
 
+/**
+ * Deletes a Ticket document from the database and removes it from the server's ticket array.
+ * @param {Object} interaction - The interaction object from Discord.js.
+ * @param {Object} ticket - The Ticket document to delete.
+ * @returns {Promise<Boolean>} - A promise that resolves to `true` if the ticket was deleted successfully, `false` otherwise.
+ */
 async function deleteTicket(interaction, ticket) {
-  const server = await db.get(Server, { serverId: interaction.guild.id });
+  const server = await db.get(Server, "Server", { serverId: interaction.guild.id });
   if (!server) return false;
-  server.Tickets.pull(ticket._id);
-  await server.save();
 
-  await db.delete(Ticket, { _id: ticket._id });
+  // For MongoDB, pull the ticket ID from the Tickets array
+  if (db.config.db_type === "mongodb") {
+    server.Tickets.pull(ticket._id);
+    await server.save();
+  } 
+  // Delete the ticket itself
+  await db.delete(Ticket, "Ticket", ticket.id);
 
   return true;
 }
@@ -82,4 +163,5 @@ module.exports = {
   createTicket,
   findTicket,
   deleteTicket,
+  getCategories,
 };

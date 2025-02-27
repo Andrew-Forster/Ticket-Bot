@@ -7,5 +7,5 @@
   "bot_name2": "Ticket Bot",
   "bot_color": "#5865F2",
   "log_channel": "1342563804063596747",
-  "db_type": "mysql"
+  "db_type": "sqlite"
 }

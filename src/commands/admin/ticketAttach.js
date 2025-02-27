@@ -17,7 +17,7 @@ const { embedPrompt } = require('../../utils/embeds/prompt');
 
 const {
   getCollectors,
-  findCategory,
+  getCategories,
 } = require('../../../db/access/ticket');
 
 module.exports = {
@@ -98,7 +98,8 @@ async function showCollectorSelect({ interaction: i }) {
   await i.deferReply({ flags: MessageFlags.Ephemeral });
   const collectors = await getCollectors(i);
 
-  if (!collectors.length) {
+  if (collectors.length < 1) {
+    await i.deleteReply();
     return Promise.reject(
       'No collectors found. Please create a collector first.',
     );
@@ -111,7 +112,7 @@ async function showCollectorSelect({ interaction: i }) {
       new StringSelectMenuOptionBuilder()
         .setLabel(c.title)
         .setDescription(c.desc)
-        .setValue(c._id.toString()),
+        .setValue(c.id.toString()),
     );
   });
 
@@ -140,8 +141,10 @@ async function showCollectorSelect({ interaction: i }) {
     collector.on('collect', async (interaction) => {
       const ticketCollectorId = interaction.values[0];
       const ticketCollector = collectors.find(
-        (c) => c?._id?.toString() === ticketCollectorId
-      );      
+        (c) => c?.id?.toString() === ticketCollectorId
+      );
+      
+      
       await i.deleteReply();
       collector.stop();
       resolve({ interaction, ticketCollector });
@@ -159,12 +162,7 @@ async function showCollectorSelect({ interaction: i }) {
 
 async function attachCollector({ interaction: i, ticketCollector }, channel) {
   await i.deferReply({ flags: MessageFlags.Ephemeral });
-  let categories = [];
-
-  for (const c of ticketCollector.categories) {
-    const category = await findCategory(c._id.toString());
-    if (category) categories.push(category);
-  }
+  const categories = await getCategories(ticketCollector);
 
   if (categories.length === 0) {
     await i.deleteReply();
@@ -182,7 +180,7 @@ async function attachCollector({ interaction: i, ticketCollector }, channel) {
   categories.forEach((c) => {
     buttons.push(
       new ButtonBuilder()
-        .setCustomId(`ticket-${c._id.toString()}`)
+        .setCustomId(`ticket-${c.id.toString()}`)
         .setLabel(c.buttonText)
         .setStyle(getButtonStyle(c))
     );

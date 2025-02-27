@@ -7,7 +7,32 @@ Built with discord.js, the bot enables seamless interaction with Discord servers
 To promote scalability and ease of future development, the bot's commands are designed to be modular, allowing for easy updates and the addition of new features without disrupting the core functionality.
 
 
+## Commands In Action
 
+
+### Setup
+(`/setup`)
+
+<video controls>
+  <source src="./videos/setup.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+### Attach
+(`/attach`)
+
+<video controls>
+  <source src="./videos/attach.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+### Manage Commands
+(`/manage`, `/open`, `/close`, `/add`, `/remove`, `/delete`)
+
+<video controls>
+  <source src="./videos/ticket.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 
 ## Changing Databases

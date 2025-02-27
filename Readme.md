@@ -13,26 +13,17 @@ To promote scalability and ease of future development, the bot's commands are de
 ### Setup
 (`/setup`)
 
-<video controls>
-  <source src="./videos/setup.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/fe7df0be-b834-4a30-8cff-565c5bf93da2
 
 ### Attach
 (`/attach`)
 
-<video controls>
-  <source src="./videos/attach.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/564ee064-9919-4d38-aaa0-b6b2dcc3733d
 
 ### Manage Commands
 (`/manage`, `/open`, `/close`, `/add`, `/remove`, `/delete`)
 
-<video controls>
-  <source src="./videos/ticket.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/2c3e2fbc-1ec3-471f-889f-5b4fb20d55ee
 
 
 ## Changing Databases

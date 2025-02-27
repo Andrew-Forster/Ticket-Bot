@@ -1,6 +1,7 @@
 const { Sequelize } = require("sequelize");
 const mongoose = require("mongoose");
 const config = require("../config/config.json");
+const { setupAssociations } = require("./associations");
 
 class DB {
   constructor() {
@@ -43,7 +44,22 @@ class DB {
       try {
         await this.db.authenticate();
         console.log(`Connected to ${this.config["db_type"]}`);
-        await this.db.sync();
+
+        const modelDefiners = [
+          require("./models/Ticket"),
+          require("./models/Server"),
+          require("./models/ticketModules/TicketCategory"),
+          require("./models/ticketModules/TicketCollector"),
+          require("./models/ticketModules/TicketResponse"),
+        ];
+
+        for (const modelDefiner of modelDefiners) {
+          modelDefiner(this);
+        }
+
+        setupAssociations(this.db);
+
+        await this.db.sync({ force: true });
       } catch (err) {
         console.error(`${this.config["db_type"]} connection error:`, err);
       }
@@ -75,7 +91,7 @@ class DB {
     throw new Error("Unsupported database type.");
   }
 
-  async getId(model, id) {
+  async getId(model) {
     if (this.config.db_type === "mongodb") {
       return await model._id;
     } else if (
@@ -83,30 +99,6 @@ class DB {
       this.config.db_type === "sqlite"
     ) {
       return await model.id;
-    }
-    throw new Error("Unsupported database type.");
-  }
-
-  async create(model, data) {
-    if (this.config.db_type === "mongodb") {
-      return await model.create(data);
-    } else if (
-      this.config.db_type === "mysql" ||
-      this.config.db_type === "sqlite"
-    ) {
-      return await model.create(data);
-    }
-    throw new Error("Unsupported database type.");
-  }
-
-  async update(model, id, data) {
-    if (this.config.db_type === "mongodb") {
-      return await model.findByIdAndUpdate(id, data);
-    } else if (
-      this.config.db_type === "mysql" ||
-      this.config.db_type === "sqlite"
-    ) {
-      return await model.update(data, { where: { id } });
     }
     throw new Error("Unsupported database type.");
   }

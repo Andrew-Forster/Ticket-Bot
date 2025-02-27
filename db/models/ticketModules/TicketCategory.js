@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const { DataTypes } = require("sequelize");
 const config = require("../../../config/config.json");
-const { db } = require("../../../app");
 
 // MongoDB
 const ticketCategorySchema = new mongoose.Schema({
@@ -19,33 +18,31 @@ const ticketCategorySchema = new mongoose.Schema({
 
 const TicketCategory = mongoose.model("TicketCategory", ticketCategorySchema);
 
-module.exports = function getTicketCategoryModel() {
+module.exports = (db) => {
   if (config.db_type === "mongodb") {
     return TicketCategory;
   } else if (config.db_type === "mysql" || config.db_type === "sqlite") {
     // SQL
     const TicketCategorySQL = db.db.define("TicketCategory", {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
       buttonText: { type: DataTypes.STRING, allowNull: false },
       buttonStyle: { type: DataTypes.STRING, allowNull: false },
       categoryId: { type: DataTypes.STRING, allowNull: false },
       closeCategoryId: { type: DataTypes.STRING, allowNull: false },
       buttonEmoji: { type: DataTypes.STRING, allowNull: true },
+      serverId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      ticketResponseId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     });
-
-    TicketCategorySQL.associate = (models) => {
-      TicketCategorySQL.belongsTo(models.Server, {
-        foreignKey: "serverId",
-      });
-      TicketCategorySQL.belongsTo(models.TicketResponse, {
-        foreignKey: "ticketResponseId",
-      });
-      TicketCategorySQL.belongsToMany(models.TicketCollector, {
-        through: "CollectorCategory",
-      });
-      TicketCategorySQL.hasMany(models.Ticket, {
-        foreignKey: "ticketCategoryId",
-      });
-    };
 
     return TicketCategorySQL;
   }

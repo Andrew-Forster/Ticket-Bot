@@ -1,15 +1,10 @@
-const getTicketResponseModel = require('../models/ticketModules/TicketResponse');
-const getTicketCategoryModel = require('../models/ticketModules/TicketCategory');
-const getTicketCollectorModel = require('../models/ticketModules/TicketCollector');
-const getTicketModel = require('../models/Ticket');
-const getServerModel = require('../models/Server');
-const { db } = require('../../app');
 
-const TicketResponse = getTicketResponseModel();
-const TicketCategory = getTicketCategoryModel();
-const TicketCollector = getTicketCollectorModel();
-const Ticket = getTicketModel();
-const Server = getServerModel();
+const { db } = require('../../app');
+const TicketResponse = require("../models/ticketModules/TicketResponse")(db);
+const TicketCategory = require("../models/ticketModules/TicketCategory")(db);
+const TicketCollector = require("../models/ticketModules/TicketCollector")(db);
+const Server = require("../models/Server")(db);
+const Ticket = require("../models/Ticket")(db);
 
 async function getCollectors(interaction) {
   const server = await Server.findOne({ serverId: interaction.guild.id });

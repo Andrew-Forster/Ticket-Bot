@@ -1,18 +1,16 @@
+# Ticket Bot
+
+The Ticket Bot project offers effortless switching between MongoDB, MySQL, and SQLite databases, providing flexibility in database management. It features 5 database models, all of which have been successfully migrated to SQL for enhanced compatibility. 
+
+Built with discord.js, the bot enables seamless interaction with Discord servers and offers a range of ticket management commands, including `/add`, `/attach`, `/close`, `/delete`, `/help`, `/manage`, `/open`, `/remove`, `/setup` and `/commands`. 
+
+To promote scalability and ease of future development, the bot's commands are designed to be modular, allowing for easy updates and the addition of new features without disrupting the core functionality.
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-# Changing Databases
+## Changing Databases
 ### config.json
 - **db_type**: `sqlite`, `mongodb`, `mysql`  
 

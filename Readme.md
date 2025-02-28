@@ -60,6 +60,12 @@ Depending on the database type you choose in `config.json`, change the provide u
 
 - **provider**: `sqlite`, `mysql`
 
+**Note:** If you change from mysql to sqlite or visa versa, run the below to update prisma:
+```
+npx prisma migrate dev --name init
+npx prisma generate
+```
 
+Then delete the migrations folder if it exists.
 
 
